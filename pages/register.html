@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Join Inner Circle</title>
+
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+    <header class="navbar">
+
+        <div class="logo">
+            <img src="../images/logo.png.jpeg" alt="Inner Circle">
+        </div>
+
+        <nav>
+            <a href="../index.html">Home</a>
+            <a href="../index.html#membership">Membership</a>
+            <a href="../index.html#benefits">Benefits</a>
+            <a href="../index.html#about">About</a>
+            <a href="login.html">Login</a>
+        </nav>
+
+    </header>
+
+
+    <main class="register-page">
+
+        <div class="register-container">
+
+            <p class="section-label">INNER CIRCLE</p>
+
+            <h1>Create Your Account</h1>
+
+            <p class="register-intro">
+                Create your member account to continue.
+            </p>
+
+<div class="selected-membership">
+
+    <p class="section-label">SELECTED MEMBERSHIP</p>
+
+    <h2 id="selectedTierName">
+        Loyalty Seal
+    </h2>
+
+    <p class="selected-tier-price" id="selectedTierPrice">
+        $2,999
+    </p>
+
+    <p id="selectedTierDescription">
+        Your selected Inner Circle membership.
+    </p>
+
+</div>
+            <form class="register-form">
+
+                <label>Full Name</label>
+
+                <input
+                    type="text"
+                    placeholder="Full Name"
+                    required
+                >
+
+
+                <label>Email Address</label>
+
+                <input
+                    type="email"
+                    placeholder="Email Address"
+                    required
+                >
+
+
+                <label>Create Password</label>
+
+                <input
+                    type="password"
+                    placeholder="Create Password"
+                    required
+                >
+
+
+                <label>Confirm Password</label>
+
+                <input
+                    type="password"
+                    placeholder="Confirm Password"
+                    required
+                >
+            <label>Choose Membership</label>
+
+<select id="membershipTier" required>
+
+    <option value="">Select a membership</option>
+
+    <option value="Loyalty Seal">
+        Loyalty Seal — $2,999
+    </option>
+
+    <option value="Trust Bond">
+        Trust Bond — $3,999
+    </option>
+
+    <option value="Eternal Circle">
+        Eternal Circle — $5,999
+    </option>
+
+</select>
+
+                <button type="submit">
+                    Create Account
+                </button>
+
+            </form>
+
+
+            <p class="login-link">
+                Already have an account?
+                <a href="login.html">Log in</a>
+            </p>
+
+        </div>
+
+    </main>
+
+
+    <script src="../script.js"></script>
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const selectedTier = params.get("tier");
+
+    const tierSelect =
+        document.getElementById("membershipTier");
+
+    const tierName =
+        document.getElementById("selectedTierName");
+
+    const tierPrice =
+        document.getElementById("selectedTierPrice");
+
+    const tierDescription =
+        document.getElementById("selectedTierDescription");
+
+
+    const tierInformation = {
+
+        "Loyalty Seal": {
+            price: "$2,999",
+            description:
+                "Core Inner Circle membership with exclusive content and member recognition."
+        },
+
+        "Trust Bond": {
+            price: "$3,999",
+            description:
+                "Expanded membership with additional exclusive content and eligible member experiences."
+        },
+
+        "Eternal Circle": {
+            price: "$5,999",
+            description:
+                "Premium membership with expanded benefits and eligible exclusive experiences."
+        }
+
+    };
+
+
+    if (selectedTier && tierSelect) {
+
+        tierSelect.value = selectedTier;
+
+    }
+
+
+    const currentTier =
+        selectedTier || "Loyalty Seal";
+
+    const information =
+        tierInformation[currentTier];
+
+
+    if (information) {
+
+        if (tierName) {
+            tierName.textContent = currentTier;
+        }
+
+        if (tierPrice) {
+            tierPrice.textContent =
+                information.price;
+        }
+
+        if (tierDescription) {
+            tierDescription.textContent =
+                information.description;
+        }
+
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Dashboard | Inner Circle</title>
+
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body class="dashboard-page">
+
+    <header class="dashboard-header">
+
+        <div class="logo">
+            INNER CIRCLE
+        </div>
+
+        <nav>
+            <a href="../index.html">Website</a>
+            <a href="dashboard.html">Member Dashboard</a>
+        </nav>
+    <button
+    type="button"
+    onclick="logoutAdmin()"
+    class="admin-logout-btn"
+     >
+     Logout
+     </button>
+    </header>
+
+
+    <main class="admin-dashboard">
+        <h1>Admin Dashboard</h1>
+
+<p>
+    Manage Inner Circle members and member activity.
+</p>
+
+        <section class="dashboard-welcome">
+
+            <p class="section-label">ADMIN AREA</p>
+
+            <h1>Member Management</h1>
+
+            <p>
+                View registered Inner Circle members and
+                their current membership status.
+            </p>
+
+        </section>
+
+
+        <section class="admin-stats">
+
+            <div class="member-card">
+                <p class="card-label">TOTAL MEMBERS</p>
+                <h2 id="totalMembers">0</h2>
+            </div>
+
+            <div class="member-card">
+                <p class="card-label">LOYALTY SEAL</p>
+                <h2 id="loyaltyCount">0</h2>
+            </div>
+
+            <div class="member-card">
+                <p class="card-label">TRUST BOND</p>
+                <h2 id="trustCount">0</h2>
+            </div>
+
+            <div class="member-card">
+                <p class="card-label">ETERNAL CIRCLE</p>
+                <h2 id="eternalCount">0</h2>
+            </div>
+
+        </section>
+
+
+        <section class="members-list">
+
+            <p class="section-label">REGISTERED MEMBERS</p>
+
+            <h2>Members</h2>
+
+            <div id="membersContainer"></div>
+
+        </section>
+<section class="interest-list">
+
+    <p class="section-label">EVENT INTEREST</p>
+
+    <h2>Member Opportunities</h2>
+
+    <div id="interestContainer">
+
+        <p>Loading event interests...</p>
+
+    </div>
+
+</section>
+<section class="admin-payment-section">
+
+    <h2>Payment Confirmation Requests</h2>
+
+    <div id="paymentRequestsContainer">
+        Loading payment requests...
+    </div>
+
+</section>
+    </main>
+
+
+    <footer>
+
+        <div class="footer-bottom">
+            <p>© 2026 Inner Circle. All rights reserved.</p>
+        </div>
+
+    </footer>
+
+
+    <script src="../script.js"></script>
+
+</body>
+
+</html>

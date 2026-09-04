@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Inner Circle | Member Dashboard</title>
+
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body class="dashboard-page">
+
+    <header class="dashboard-navbar">
+
+    <div class="dashboard-logo">
+        <img src="../images/logo.png.jpeg" alt="Inner Circle">
+    </div>
+
+    <nav class="dashboard-nav">
+
+        <a href="dashboard.html">Dashboard</a>
+
+        <a href="#member-profile">Profile</a>
+
+        <a href="#member-benefits">Benefits</a>
+
+        <button type="button" onclick="logoutMember()">
+            Logout
+        </button>
+
+    </nav>
+
+</header>
+
+
+    <main class="dashboard">
+
+        <section class="dashboard-welcome">
+<h1>
+    Welcome back,
+    <span id="welcomeMemberName">Member</span>
+</h1>
+
+<p class="dashboard-intro">
+    Your private Inner Circle member space.
+</p>
+
+
+        </section>
+<div class="membership-status-card">
+
+    <div>
+        <span class="status-label">
+            MEMBERSHIP
+        </span>
+
+        <h2 id="dashboardMembershipTier">
+            Loyalty Seal
+        </h2>
+    </div>
+
+    <span class="status-badge">
+        ACTIVE MEMBER
+    </span>
+
+</div>
+
+        <section class="member-overview">
+
+    <div class="member-profile-card">
+
+        <div class="profile-avatar">
+            <span id="profileInitial">M</span>
+        </div>
+
+        <div class="profile-details">
+
+            <p class="card-label">MEMBER PROFILE</p>
+
+            <h2 id="profileName">Member</h2>
+
+            <p id="profileEmail" class="profile-email">
+                Loading email...
+            </p>
+
+            <div class="profile-info">
+
+                <div>
+                    <span>MEMBER ID</span>
+                    <strong id="profileId">---</strong>
+                </div>
+
+                <div>
+                    <span>MEMBERSHIP</span>
+                    <strong id="profileMembership">
+                        Pending
+                    </strong>
+                </div>
+
+                <div>
+                    <span>MEMBER SINCE</span>
+                    <strong id="profileDate">
+                        ---
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+<section class="dashboard-welcome">
+
+    <div class="welcome-content">
+
+        <p class="section-label">INNER CIRCLE MEMBER</p>
+
+        <h1>
+            Welcome,
+            <span id="welcomeMemberName">Member</span>
+        </h1>
+
+        <p>
+            Your member space is ready. Explore your
+            membership details, benefits and available
+            experiences.
+        </p>
+
+    </div>
+
+    <div class="welcome-status">
+        <span>ACCOUNT STATUS</span>
+        <strong>ACTIVE</strong>
+    </div>
+
+</section>
+<section class="quick-access">
+
+    <div class="quick-access-header">
+        <p class="section-label">QUICK ACCESS</p>
+        <h2>Explore Your Member Space</h2>
+    </div>
+
+    <div class="quick-access-grid">
+
+        <a href="#member-profile" class="quick-card">
+            <span>01</span>
+            <h3>My Profile</h3>
+            <p>View your account information and membership details.</p>
+        </a>
+<div class="payment-section">
+
+    <h2>Membership Confirmation</h2>
+
+    <p id="paymentStatus">
+        No payment confirmation submitted.
+    </p>
+
+    <button id="paymentButton">
+        I've Made My Payment
+    </button>
+
+    <p id="paymentMessage"></p>
+
+</div>
+<div class="payment-status-card">
+
+    <span class="status-label">
+        PAYMENT STATUS
+    </span>
+
+    <h2 id="memberPaymentStatus">
+        Checking...
+    </h2>
+
+    <p id="memberPaymentMessage">
+        Checking your membership confirmation.
+    </p>
+
+</div>
+        <a href="#member-benefits" class="quick-card">
+            <span>02</span>
+            <h3>My Benefits</h3>
+            <p>Explore the benefits available with your membership.</p>
+        </a>
+
+        <a href="#membership-overview" class="quick-card">
+            <span>03</span>
+            <h3>Membership</h3>
+            <p>Review your current membership tier and status.</p>
+        </a>
+
+        <a href="../index.html#contact" class="quick-card">
+            <span>04</span>
+            <h3>Contact</h3>
+            <p>Get in touch with the Inner Circle team.</p>
+        </a>
+
+    </div>
+
+</section>
+<section class="member-status">
+
+    <div class="status-header">
+
+        <div>
+            <p class="section-label">MEMBERSHIP</p>
+
+            <h2>My Inner Circle</h2>
+        </div>
+
+        <span class="status-badge">
+            ACTIVE
+        </span>
+
+    </div>
+
+
+    <div class="member-details">
+
+        <div class="member-detail">
+
+            <span>MEMBER</span>
+
+            <strong id="dashboardMemberName">
+                Member
+            </strong>
+
+        </div>
+
+
+        <div class="member-detail">
+
+            <span>EMAIL</span>
+
+            <strong id="dashboardMemberEmail">
+                —
+            </strong>
+
+        </div>
+
+
+        <div class="member-detail">
+
+            <span>MEMBERSHIP</span>
+
+            <strong id="dashboardMembershipTier">
+                Loyalty Seal
+            </strong>
+
+        </div>
+
+
+        <div class="member-detail">
+
+            <span>STATUS</span>
+
+            <strong>
+                Active
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <div id="member-benefits" class="member-benefits">
+
+    <h3>Your Member Benefits</h3>
+
+    <ul id="dashboardBenefits">
+        <li>Loading your benefits...</li>
+    </ul>
+
+</div>
+
+</section>
+<section id="membership-overview" class="membership-overview">
+
+    <p class="section-label">MEMBERSHIP OVERVIEW</p>
+
+    <h2 id="overviewTier">
+        Your Membership
+    </h2>
+
+    <p id="overviewDescription">
+        Your membership details will appear here.
+    </p>
+
+    <div class="overview-details">
+
+        <div>
+            <span>MEMBERSHIP</span>
+            <strong id="overviewMembership">
+                —
+            </strong>
+        </div>
+
+        <div>
+            <span>STATUS</span>
+            <strong class="overview-active">
+                Active
+            </strong>
+        </div>
+
+    </div>
+
+</section>
+<section id="member-profile" class="profile-section">
+
+    <div class="profile-header">
+
+        <p class="section-label">MY PROFILE</p>
+
+        <h2>Account Information</h2>
+
+    </div>
+
+
+    <div class="profile-card">
+
+        <div class="profile-row">
+            <span>FULL NAME</span>
+            <strong id="profileName">Member</strong>
+        </div>
+
+        <div class="profile-row">
+            <span>EMAIL ADDRESS</span>
+            <strong id="profileEmail">—</strong>
+        </div>
+
+        <div class="profile-row">
+            <span>MEMBERSHIP TIER</span>
+            <strong id="profileTier">—</strong>
+        </div>
+
+        <div class="profile-row">
+            <span>ACCOUNT STATUS</span>
+            <strong class="profile-active">
+                Active
+            </strong>
+        </div>
+
+    </div>
+
+</section>
+<section class="dashboard-benefits">
+
+    <p class="section-label">YOUR BENEFITS</p>
+
+    <h2>Member Experience</h2>
+
+    <p id="membershipDescription" class="membership-description">
+        Loading your membership benefits...
+    </p>
+
+    <div id="dynamicBenefits" class="dashboard-benefit-grid">
+    </div>
+
+</section>
+<section class="membership-selection">
+
+    <p class="section-label">MEMBERSHIP</p>
+
+    <h2>Choose Your Inner Circle</h2>
+
+    <p class="membership-selection-text">
+        Select the membership experience you would like to explore.
+    </p>
+
+    <div class="membership-selection-grid">
+
+        <div class="selection-card">
+
+            <h3>Loyalty Seal</h3>
+
+            <p class="selection-description">
+                A foundational Inner Circle experience with
+                member recognition and selected benefits.
+            </p>
+
+            <button
+                class="select-membership"
+                data-membership="Loyalty Seal">
+                Select Membership
+            </button>
+
+        </div>
+
+
+        <div class="selection-card featured-selection">
+
+            <span class="selection-badge">FEATURED</span>
+
+            <h3>Trust Bond</h3>
+
+            <p class="selection-description">
+                A deeper membership experience with additional
+                member benefits and exclusive opportunities.
+            </p>
+
+            <button
+                class="select-membership"
+                data-membership="Trust Bond">
+                Select Membership
+            </button>
+
+        </div>
+
+
+        <div class="selection-card">
+
+            <h3>Eternal Circle</h3>
+
+            <p class="selection-description">
+                The highest Inner Circle tier with expanded
+                benefits and eligible exclusive experiences.
+            </p>
+
+            <button
+                class="select-membership"
+                data-membership="Eternal Circle">
+                Select Membership
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+<section class="exclusive-section">
+
+    <p class="section-label">EXCLUSIVE ACCESS</p>
+
+    <h2>Inside Your Circle</h2>
+
+    <p class="exclusive-intro">
+        Explore experiences and opportunities available
+        to Inner Circle members.
+    </p>
+
+
+    <div class="exclusive-grid">
+
+        <div class="exclusive-card">
+
+            <div class="exclusive-icon">✦</div>
+
+            <h3>Members-Only Updates</h3>
+
+            <p>
+                Stay informed with selected announcements,
+                news and updates created for the Inner Circle.
+            </p>
+
+            <span class="access-label">
+                MEMBER ACCESS
+            </span>
+
+        </div>
+
+
+        <div class="exclusive-card">
+
+            <div class="exclusive-icon">★</div>
+
+            <h3>Meet &amp; Greet</h3>
+
+            <p>
+                Discover eligible opportunities for designated
+                meet-and-greet experiences and special events.
+            </p>
+
+            <span class="access-label">
+                OPPORTUNITIES
+            </span>
+
+        </div>
+
+
+        <div class="exclusive-card">
+
+            <div class="exclusive-icon">◇</div>
+
+            <h3>Exclusive Events</h3>
+
+            <p>
+                Explore selected events and experiences
+                available to eligible Inner Circle members.
+            </p>
+
+            <span class="access-label">
+                EVENTS
+            </span>
+
+        </div>
+
+
+        <div class="exclusive-card">
+
+            <div class="exclusive-icon">∞</div>
+
+            <h3>Member Rewards</h3>
+
+            <p>
+                View rewards and special recognition associated
+                with your membership level.
+            </p>
+
+            <span class="access-label">
+                REWARDS
+            </span>
+
+        </div>
+
+    </div>
+
+</section>
+<section class="events-section">
+
+    <p class="section-label">MEMBER EVENTS</p>
+
+    <h2>Meet &amp; Greet &amp; Events</h2>
+
+    <p class="events-intro">
+        Explore upcoming opportunities and experiences
+        available to eligible Inner Circle members.
+    </p>
+
+    <div class="events-grid">
+
+        <div class="event-card">
+
+            <div class="event-image">
+                <span>INNER CIRCLE EVENT</span>
+            </div>
+
+            <div class="event-content">
+
+                <span class="event-type">
+                    MEET &amp; GREET
+                </span>
+
+                <h3>Private Member Meet &amp; Greet</h3>
+
+                <p>
+                    An exclusive opportunity for eligible
+                    members to participate in a scheduled
+                    meet-and-greet experience.
+                </p>
+
+                <div class="event-details">
+
+                    <span>DATE: TO BE ANNOUNCED</span>
+
+                    <span>LOCATION: TO BE ANNOUNCED</span>
+
+                </div>
+
+                <button
+    class="event-button"
+    onclick="window.location.href='event.html'">
+    View Opportunity
+</button>
+
+            </div>
+
+        </div>
+
+
+        <div class="event-card">
+
+            <div class="event-image">
+                <span>INNER CIRCLE EVENT</span>
+            </div>
+
+            <div class="event-content">
+
+                <span class="event-type">
+                    EXCLUSIVE EVENT
+                </span>
+
+                <h3>Inner Circle Experience</h3>
+
+                <p>
+                    Discover selected events and experiences
+                    created for eligible members.
+                </p>
+
+                <div class="event-details">
+
+                    <span>DATE: TO BE ANNOUNCED</span>
+
+                    <span>LOCATION: TO BE ANNOUNCED</span>
+
+                </div>
+
+                <button
+    class="event-button"
+    onclick="window.location.href='event.html?event=exclusive'">
+    View Opportunity
+</button>
+                
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+        <section class="dashboard-message">
+
+            <h2>Your Inner Circle Experience</h2>
+
+            <p>
+                Keep an eye on your member area for announcements,
+                eligible experiences and new opportunities.
+            </p>
+
+            <a href="../index.html#contact">
+                Contact Inner Circle
+            </a>
+
+        </section>
+
+    </main>
+
+
+    <footer>
+
+        <div class="footer-bottom">
+            <p>© 2026 Inner Circle. All rights reserved.</p>
+        </div>
+
+    </footer>
+
+
+    <script src="../script.js"></script>
+    <script>
+    const member =
+        sessionStorage.getItem("innerCircleMember");
+
+    if (!member) {
+        window.location.href = "login.html";
+    }
+</script>
+
+</body>
+
+</html>

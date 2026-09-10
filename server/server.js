@@ -174,7 +174,12 @@ app.post("/api/login", async (req, res) => {
             membershipTier: member.membership_tier,
             createdAt: member.created_at
         });
-
+await pool.query(`
+    INSERT INTO sessions
+    (token, member_id)
+    VALUES ($1, $2)
+    ON CONFLICT (token) DO NOTHING
+`, [sessionToken, member.id]);
         res.json({
             success: true,
             message: "Login successful.",
@@ -336,7 +341,12 @@ app.post("/api/admin/login", async (req, res) => {
     adminSessions.set(adminToken, {
         username: ADMIN_USERNAME
     });
-
+await pool.query(`
+    INSERT INTO admin_sessions
+    (token, username)
+    VALUES ($1, $2)
+    ON CONFLICT (token) DO NOTHING
+`, [adminToken, ADMIN_USERNAME]);
     res.json({
         success: true,
         message: "Admin login successful.",
@@ -802,13 +812,67 @@ app.get("/api/payment-status", async (req, res) => {
     }
 });
 
+// ========================================
+// RESTORE SESSIONS FROM DATABASE
+// ========================================
+
+async function restoreSessions() {
+
+    const memberSessions = await pool.query(`
+        SELECT
+            sessions.token,
+            members.id,
+            members.full_name,
+            members.email,
+            members.membership,
+            members.membership_tier,
+            members.created_at
+        FROM sessions
+        JOIN members
+            ON sessions.member_id = members.id
+    `);
+
+    for (const member of memberSessions.rows) {
+
+        sessions.set(member.token, {
+            id: member.id,
+            fullName: member.full_name,
+            email: member.email,
+            membership: member.membership,
+            membershipTier: member.membership_tier,
+            createdAt: member.created_at
+        });
+    }
+
+    const adminResult = await pool.query(`
+        SELECT token, username
+        FROM admin_sessions
+    `);
+
+    for (const admin of adminResult.rows) {
+
+        adminSessions.set(admin.token, {
+            username: admin.username
+        });
+    }
+
+    console.log(
+        `Restored ${memberSessions.rows.length} member session(s).`
+    );
+
+    console.log(
+        `Restored ${adminResult.rows.length} admin session(s).`
+    );
+}
 
 // ========================================
 // START SERVER
 // ========================================
 
 initDatabase()
-    .then(() => {
+    .then(async () => {
+
+        await restoreSessions();
 
         app.listen(PORT, "0.0.0.0", () => {
             console.log(

@@ -1,34 +1,30 @@
-require("dotenv").config();
+require("dotenv").config({ path: __dirname + "/.env" });
+
 const express = require("express");
 const path = require("path");
-const db = require("./database");
+const crypto = require("crypto");
+
+const database = require("./database");
+
+const pool = database.pool;
+const initDatabase = database.initDatabase;
 
 const app = express();
-const crypto = require("crypto");
 
 const sessions = new Map();
 const adminSessions = new Map();
-const PORT = process.env.PORT || 3000;
-// PAYMENT CONFIRMATION TABLE
 
-db.prepare(`
-    CREATE TABLE IF NOT EXISTS payment_requests (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        member_id INTEGER NOT NULL,
-        membership TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'Pending',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        confirmed_at DATETIME
-    )
-`).run();
-// Allow the server to receive JSON
+const PORT = process.env.PORT || 3000;
+
 app.use(express.json());
 
-// Serve the website
 app.use(express.static(path.join(__dirname, "..")));
 
 
-// Test route
+// ========================================
+// STATUS
+// ========================================
+
 app.get("/api/status", (req, res) => {
     res.json({
         success: true,
@@ -37,15 +33,18 @@ app.get("/api/status", (req, res) => {
 });
 
 
+// ========================================
 // MEMBER REGISTRATION
-app.post("/api/register", (req, res) => {
+// ========================================
+
+app.post("/api/register", async (req, res) => {
 
     const {
-    fullName,
-    email,
-    password,
-    membershipTier
-} = req.body;
+        fullName,
+        email,
+        password,
+        membershipTier
+    } = req.body;
 
     if (!fullName || !email || !password) {
         return res.status(400).json({
@@ -63,8 +62,6 @@ app.post("/api/register", (req, res) => {
 
     try {
 
-        const crypto = require("crypto");
-
         const salt = crypto.randomBytes(16).toString("hex");
 
         const hash = crypto
@@ -73,17 +70,18 @@ app.post("/api/register", (req, res) => {
 
         const passwordHash = `${salt}:${hash}`;
 
-        const statement = db.prepare(`
-         INSERT INTO members
-         (full_name, email, password_hash, membership_tier)
-         VALUES (?, ?, ?, ?)
-        `);
-
-        statement.run(
-            fullName,
-            email,
-            passwordHash,
-            membershipTier
+        await pool.query(
+            `
+            INSERT INTO members
+            (full_name, email, password_hash, membership_tier)
+            VALUES ($1, $2, $3, $4)
+            `,
+            [
+                fullName,
+                email,
+                passwordHash,
+                membershipTier || "Loyalty Seal"
+            ]
         );
 
         res.json({
@@ -93,14 +91,14 @@ app.post("/api/register", (req, res) => {
 
     } catch (error) {
 
-        if (error.message.includes("UNIQUE")) {
+        if (error.code === "23505") {
             return res.status(409).json({
                 success: false,
                 message: "An account with this email already exists."
             });
         }
 
-        console.error(error);
+        console.error("REGISTRATION ERROR:", error);
 
         res.status(500).json({
             success: false,
@@ -108,7 +106,13 @@ app.post("/api/register", (req, res) => {
         });
     }
 });
-app.post("/api/login", (req, res) => {
+
+
+// ========================================
+// MEMBER LOGIN
+// ========================================
+
+app.post("/api/login", async (req, res) => {
 
     const { email, password } = req.body;
 
@@ -121,15 +125,16 @@ app.post("/api/login", (req, res) => {
 
     try {
 
-        const crypto = require("crypto");
-
-        const statement = db.prepare(`
+        const result = await pool.query(
+            `
             SELECT *
             FROM members
-            WHERE email = ?
-        `);
+            WHERE email = $1
+            `,
+            [email]
+        );
 
-        const member = statement.get(email);
+        const member = result.rows[0];
 
         if (!member || !member.password_hash) {
             return res.status(401).json({
@@ -158,32 +163,36 @@ app.post("/api/login", (req, res) => {
             });
         }
 
-    const sessionToken = crypto.randomBytes(32).toString("hex");
+        const sessionToken =
+            crypto.randomBytes(32).toString("hex");
 
-sessions.set(sessionToken, {
-    id: member.id,
-    fullName: member.full_name,
-    email: member.email,
-    membershipTier: member.membership_tier,
-    createdAt: member.created_at
-});
+        sessions.set(sessionToken, {
+            id: member.id,
+            fullName: member.full_name,
+            email: member.email,
+            membership: member.membership,
+            membershipTier: member.membership_tier,
+            createdAt: member.created_at
+        });
 
-res.json({
-    success: true,
-    message: "Login successful.",
-    token: sessionToken,
-    member: {
-    id: member.id,
-    fullName: member.full_name,
-    email: member.email,
-    createdAt: member.created_at,
-    membershipTier: member.membership_tier
-}
-});
+        res.json({
+            success: true,
+            message: "Login successful.",
+            token: sessionToken,
+
+            member: {
+                id: member.id,
+                fullName: member.full_name,
+                email: member.email,
+                membership: member.membership,
+                membershipTier: member.membership_tier,
+                createdAt: member.created_at
+            }
+        });
 
     } catch (error) {
 
-        console.error(error);
+        console.error("LOGIN ERROR:", error);
 
         res.status(500).json({
             success: false,
@@ -191,6 +200,12 @@ res.json({
         });
     }
 });
+
+
+// ========================================
+// CURRENT MEMBER
+// ========================================
+
 app.get("/api/me", (req, res) => {
 
     const token = req.headers.authorization;
@@ -216,9 +231,13 @@ app.get("/api/me", (req, res) => {
         member: member
     });
 });
-// UPDATE MEMBERSHIP
 
-app.post("/api/membership", (req, res) => {
+
+// ========================================
+// UPDATE MEMBERSHIP
+// ========================================
+
+app.post("/api/membership", async (req, res) => {
 
     const token = req.headers.authorization;
     const { membership } = req.body;
@@ -254,14 +273,17 @@ app.post("/api/membership", (req, res) => {
 
     try {
 
-        const statement = db.prepare(`
+        await pool.query(
+            `
             UPDATE members
-            SET membership_tier = ?
-            WHERE id = ?
-        `);
+            SET membership = $1,
+                membership_tier = $1
+            WHERE id = $2
+            `,
+            [membership, member.id]
+        );
 
-        statement.run(membership, member.id);
-
+        member.membership = membership;
         member.membershipTier = membership;
 
         sessions.set(token, member);
@@ -269,12 +291,12 @@ app.post("/api/membership", (req, res) => {
         res.json({
             success: true,
             message: "Membership updated successfully.",
-            membershipTier: membership
+            membership: membership
         });
 
     } catch (error) {
 
-        console.error(error);
+        console.error("MEMBERSHIP ERROR:", error);
 
         res.status(500).json({
             success: false,
@@ -282,59 +304,104 @@ app.post("/api/membership", (req, res) => {
         });
     }
 });
-// ADMIN - VIEW MEMBERS
 
-app.get("/api/admin/members", (req, res) => {
-const adminToken =
+
+// ========================================
+// ADMIN LOGIN
+// ========================================
+
+app.post("/api/admin/login", async (req, res) => {
+
+    const { username, password } = req.body;
+
+    const ADMIN_USERNAME =
+        process.env.ADMIN_USERNAME;
+
+    const ADMIN_PASSWORD =
+        process.env.ADMIN_PASSWORD;
+
+    if (
+        username !== ADMIN_USERNAME ||
+        password !== ADMIN_PASSWORD
+    ) {
+        return res.status(401).json({
+            success: false,
+            message: "Invalid admin credentials."
+        });
+    }
+
+    const adminToken =
+        crypto.randomBytes(32).toString("hex");
+
+    adminSessions.set(adminToken, {
+        username: ADMIN_USERNAME
+    });
+
+    res.json({
+        success: true,
+        message: "Admin login successful.",
+        token: adminToken
+    });
+});
+
+
+// ========================================
+// ADMIN - VIEW MEMBERS
+// ========================================
+
+app.get("/api/admin/members", async (req, res) => {
+
+    const adminToken =
         req.headers.authorization;
 
-    if (!adminToken ||
-        !adminSessions.has(adminToken)) {
-
+    if (
+        !adminToken ||
+        !adminSessions.has(adminToken)
+    ) {
         return res.status(401).json({
             success: false,
             message: "Admin authentication required."
         });
-
     }
+
     try {
 
-        const statement = db.prepare(`
+        const result = await pool.query(
+            `
             SELECT
                 id,
                 full_name,
                 email,
+                membership,
                 membership_tier,
                 created_at
             FROM members
             ORDER BY created_at DESC
-        `);
-
-        const members = statement.all();
+            `
+        );
 
         res.json({
             success: true,
-            members: members
+            members: result.rows
         });
 
     } catch (error) {
 
-        console.error(
-            "ADMIN MEMBERS ERROR:",
-            error
-        );
+        console.error("ADMIN MEMBERS ERROR:", error);
 
         res.status(500).json({
             success: false,
             message: "Unable to load members."
         });
-
     }
-
 });
-// EVENT INTEREST
 
-app.post("/api/event-interest", (req, res) => {
+
+// ========================================
+// EVENT INTEREST
+// ========================================
+
+app.post("/api/event-interest", async (req, res) => {
 
     const token = req.headers.authorization;
     const { event } = req.body;
@@ -364,15 +431,13 @@ app.post("/api/event-interest", (req, res) => {
 
     try {
 
-        const statement = db.prepare(`
+        await pool.query(
+            `
             INSERT INTO event_interests
             (member_id, event_name)
-            VALUES (?, ?)
-        `);
-
-        statement.run(
-            member.id,
-            event
+            VALUES ($1, $2)
+            `,
+            [member.id, event]
         );
 
         res.json({
@@ -382,39 +447,46 @@ app.post("/api/event-interest", (req, res) => {
 
     } catch (error) {
 
-        if (error.message.includes("UNIQUE")) {
+        if (error.code === "23505") {
             return res.status(409).json({
                 success: false,
                 message: "You have already expressed interest in this event."
             });
         }
 
-        console.error(error);
+        console.error("EVENT INTEREST ERROR:", error);
 
         res.status(500).json({
             success: false,
             message: "Unable to record your interest."
         });
     }
-}),
-// ADMIN - VIEW EVENT INTERESTS
+});
 
-app.get("/api/admin/event-interests", (req, res) => {
-const adminToken =
+
+// ========================================
+// ADMIN - EVENT INTERESTS
+// ========================================
+
+app.get("/api/admin/event-interests", async (req, res) => {
+
+    const adminToken =
         req.headers.authorization;
 
-    if (!adminToken ||
-        !adminSessions.has(adminToken)) {
-
+    if (
+        !adminToken ||
+        !adminSessions.has(adminToken)
+    ) {
         return res.status(401).json({
             success: false,
             message: "Admin authentication required."
         });
-
     }
+
     try {
 
-        const statement = db.prepare(`
+        const result = await pool.query(
+            `
             SELECT
                 event_interests.id,
                 members.full_name,
@@ -425,71 +497,31 @@ const adminToken =
             JOIN members
                 ON event_interests.member_id = members.id
             ORDER BY event_interests.created_at DESC
-        `);
-
-        const interests = statement.all();
+            `
+        );
 
         res.json({
             success: true,
-            interests: interests
+            interests: result.rows
         });
 
     } catch (error) {
 
-        console.error(error);
+        console.error("EVENT INTERESTS ERROR:", error);
 
         res.status(500).json({
             success: false,
             message: "Unable to load event interests."
         });
     }
-
-}),
-// ========================================
-// ADMIN LOGIN
-// ========================================
-
-app.post("/api/admin/login", (req, res) => {
-
-    const { username, password } = req.body;
-
-    // Development credentials
-    // Change these before production.
-    const ADMIN_USERNAME =
-    process.env.ADMIN_USERNAME;
-
-const ADMIN_PASSWORD =
-    process.env.ADMIN_PASSWORD;
-
-    if (
-        username !== ADMIN_USERNAME ||
-        password !== ADMIN_PASSWORD
-    ) {
-        return res.status(401).json({
-            success: false,
-            message: "Invalid admin credentials."
-        });
-    }
-
-    const adminToken =
-        crypto.randomBytes(32).toString("hex");
-
-    adminSessions.set(adminToken, {
-        username: ADMIN_USERNAME
-    });
-
-    res.json({
-        success: true,
-        message: "Admin login successful.",
-        token: adminToken
-    });
-
 });
+
+
 // ========================================
 // PAYMENT REQUEST
 // ========================================
 
-app.post("/api/payment-request", (req, res) => {
+app.post("/api/payment-request", async (req, res) => {
 
     const token = req.headers.authorization;
     const { membership } = req.body;
@@ -525,13 +557,18 @@ app.post("/api/payment-request", (req, res) => {
 
     try {
 
-        const existing = db.prepare(`
+        const existingResult = await pool.query(
+            `
             SELECT id
             FROM payment_requests
-            WHERE member_id = ?
-            AND membership = ?
+            WHERE member_id = $1
+            AND membership = $2
             AND status = 'Pending'
-        `).get(member.id, membership);
+            `,
+            [member.id, membership]
+        );
+
+        const existing = existingResult.rows[0];
 
         if (existing) {
             return res.status(409).json({
@@ -540,15 +577,13 @@ app.post("/api/payment-request", (req, res) => {
             });
         }
 
-        const statement = db.prepare(`
+        await pool.query(
+            `
             INSERT INTO payment_requests
             (member_id, membership)
-            VALUES (?, ?)
-        `);
-
-        statement.run(
-            member.id,
-            membership
+            VALUES ($1, $2)
+            `,
+            [member.id, membership]
         );
 
         res.json({
@@ -558,7 +593,7 @@ app.post("/api/payment-request", (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        console.error("PAYMENT REQUEST ERROR:", error);
 
         res.status(500).json({
             success: false,
@@ -567,11 +602,12 @@ app.post("/api/payment-request", (req, res) => {
     }
 });
 
+
 // ========================================
 // ADMIN - PAYMENT REQUESTS
 // ========================================
 
-app.get("/api/admin/payment-requests", (req, res) => {
+app.get("/api/admin/payment-requests", async (req, res) => {
 
     const adminToken =
         req.headers.authorization;
@@ -588,7 +624,8 @@ app.get("/api/admin/payment-requests", (req, res) => {
 
     try {
 
-        const statement = db.prepare(`
+        const result = await pool.query(
+            `
             SELECT
                 payment_requests.id,
                 members.full_name,
@@ -601,18 +638,17 @@ app.get("/api/admin/payment-requests", (req, res) => {
             JOIN members
                 ON payment_requests.member_id = members.id
             ORDER BY payment_requests.created_at DESC
-        `);
-
-        const requests = statement.all();
+            `
+        );
 
         res.json({
             success: true,
-            requests: requests
+            requests: result.rows
         });
 
     } catch (error) {
 
-        console.error(error);
+        console.error("PAYMENT REQUESTS ERROR:", error);
 
         res.status(500).json({
             success: false,
@@ -620,11 +656,13 @@ app.get("/api/admin/payment-requests", (req, res) => {
         });
     }
 });
+
+
 // ========================================
 // ADMIN - CONFIRM PAYMENT
 // ========================================
 
-app.post("/api/admin/confirm-payment", (req, res) => {
+app.post("/api/admin/confirm-payment", async (req, res) => {
 
     const adminToken =
         req.headers.authorization;
@@ -650,11 +688,16 @@ app.post("/api/admin/confirm-payment", (req, res) => {
 
     try {
 
-        const request = db.prepare(`
+        const requestResult = await pool.query(
+            `
             SELECT *
             FROM payment_requests
-            WHERE id = ?
-        `).get(requestId);
+            WHERE id = $1
+            `,
+            [requestId]
+        );
+
+        const request = requestResult.rows[0];
 
         if (!request) {
             return res.status(404).json({
@@ -663,20 +706,24 @@ app.post("/api/admin/confirm-payment", (req, res) => {
             });
         }
 
-        db.prepare(`
+        await pool.query(
+            `
             UPDATE payment_requests
             SET status = 'Confirmed',
                 confirmed_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        `).run(requestId);
+            WHERE id = $1
+            `,
+            [requestId]
+        );
 
-        db.prepare(`
+        await pool.query(
+            `
             UPDATE members
-            SET membership = ?
-            WHERE id = ?
-        `).run(
-            request.membership,
-            request.member_id
+            SET membership = $1,
+                membership_tier = $1
+            WHERE id = $2
+            `,
+            [request.membership, request.member_id]
         );
 
         res.json({
@@ -686,7 +733,7 @@ app.post("/api/admin/confirm-payment", (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        console.error("CONFIRM PAYMENT ERROR:", error);
 
         res.status(500).json({
             success: false,
@@ -695,11 +742,12 @@ app.post("/api/admin/confirm-payment", (req, res) => {
     }
 });
 
+
 // ========================================
 // MEMBER PAYMENT STATUS
 // ========================================
 
-app.get("/api/payment-status", (req, res) => {
+app.get("/api/payment-status", async (req, res) => {
 
     const token = req.headers.authorization;
 
@@ -721,17 +769,22 @@ app.get("/api/payment-status", (req, res) => {
 
     try {
 
-        const payment = db.prepare(`
+        const paymentResult = await pool.query(
+            `
             SELECT
                 membership,
                 status,
                 created_at,
                 confirmed_at
             FROM payment_requests
-            WHERE member_id = ?
+            WHERE member_id = $1
             ORDER BY id DESC
             LIMIT 1
-        `).get(member.id);
+            `,
+            [member.id]
+        );
+
+        const payment = paymentResult.rows[0];
 
         res.json({
             success: true,
@@ -740,7 +793,7 @@ app.get("/api/payment-status", (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        console.error("PAYMENT STATUS ERROR:", error);
 
         res.status(500).json({
             success: false,
@@ -749,9 +802,26 @@ app.get("/api/payment-status", (req, res) => {
     }
 });
 
+
+// ========================================
 // START SERVER
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(
-        `Inner Circle server running on http://localhost:${PORT}`
-    );
-})
+// ========================================
+
+initDatabase()
+    .then(() => {
+
+        app.listen(PORT, "0.0.0.0", () => {
+            console.log(
+                `Inner Circle server running on port ${PORT}`
+            );
+        });
+
+    })
+    .catch((error) => {
+
+        console.error(
+            "Database initialization failed:",
+            error
+        );
+
+    });

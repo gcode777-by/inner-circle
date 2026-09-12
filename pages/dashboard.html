@@ -138,6 +138,7 @@
     </div>
 
 </section>
+<div id="memberNotification" class="member-notification"></div>
 <section class="quick-access">
 
     <div class="quick-access-header">
@@ -202,6 +203,29 @@
 
     </div>
 
+</section>
+<section class="membership-status-card">
+    <h2>Membership Status</h2>
+
+    <div class="status-row">
+        <span>Membership</span>
+        <strong id="statusMembership">Loading...</strong>
+    </div>
+
+    <div class="status-row">
+        <span>Payment Status</span>
+        <strong id="statusPayment">Loading...</strong>
+    </div>
+
+    <div class="status-row">
+        <span>Member Since</span>
+        <strong id="statusDate">Loading...</strong>
+    </div>
+
+    <div class="status-row">
+        <span>Event Interest</span>
+        <strong id="statusEvent">Not submitted</strong>
+    </div>
 </section>
 <section class="member-status">
 
@@ -613,7 +637,9 @@
     </div>
 
 </section>
-
+if (window.location.pathname.includes("dashboard.html")) {
+    loadMemberNotification();
+}
         <section class="dashboard-message">
 
             <h2>Your Inner Circle Experience</h2>

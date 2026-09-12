@@ -2817,3 +2817,154 @@ footer {
 
     line-height: 1.6;
 }
+.membership-status-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 25px 0;
+    backdrop-filter: blur(10px);
+}
+
+.membership-status-card h2 {
+    margin-bottom: 20px;
+}
+
+.status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.status-row:last-child {
+    border-bottom: none;
+}
+
+.status-row span {
+    opacity: 0.7;
+}
+
+.status-row strong {
+    text-align: right;
+}
+.payment-request-card {
+    padding: 20px;
+    margin: 15px 0;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+}
+
+.payment-request-card h3 {
+    margin-bottom: 10px;
+}
+
+.payment-request-card button {
+    margin-top: 12px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+/* ================================
+   MOBILE RESPONSIVE DESIGN
+================================ */
+
+@media (max-width: 768px) {
+
+    body {
+        overflow-x: hidden;
+    }
+
+    .container,
+    .hero,
+    .section,
+    main {
+        width: 100%;
+        max-width: 100%;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    nav {
+        padding: 15px 20px;
+    }
+
+    nav ul {
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .hero {
+        min-height: 80vh;
+        text-align: center;
+    }
+
+    .hero h1 {
+        font-size: 2.2rem;
+        line-height: 1.2;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+
+    .membership-container,
+    .membership-grid,
+    .benefits-grid,
+    .cards,
+    .card-container {
+        grid-template-columns: 1fr !important;
+        width: 100%;
+    }
+
+    .membership-card,
+    .card,
+    .benefit-card {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .status-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .status-row strong {
+        text-align: left;
+    }
+
+    .payment-request-card {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    form {
+        width: 100%;
+    }
+
+    footer {
+        text-align: center;
+        padding: 30px 20px;
+    }
+}
+.member-notification {
+    padding: 15px 18px;
+    margin: 20px 0;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    line-height: 1.5;
+}

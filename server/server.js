@@ -17,7 +17,12 @@ const adminSessions = new Map();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-
+app.use((req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    next();
+});
 app.use(express.static(path.join(__dirname, "..")));
 
 

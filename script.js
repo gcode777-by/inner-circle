@@ -824,7 +824,11 @@ if (interestButton) {
 
                     message.textContent =
                         "Your interest has been recorded.";
+                    const eventStatus = document.getElementById("statusEvent");
 
+                      if (eventStatus) {
+                      eventStatus.textContent = "Interest Submitted";
+                    }
                 }
 
 
@@ -1824,9 +1828,9 @@ async function loadMemberPaymentStatus() {
 // PROTECT ADMIN DASHBOARD
 // ========================================
 
-if (
-    window.location.pathname.includes("admin.html")
-) {
+if ( window.location.pathname.includes("admin.html"))
+    loadPaymentRequests();
+ {
 
     const adminToken =
         sessionStorage.getItem(
@@ -1840,4 +1844,182 @@ if (
 
     }
 
+}
+async function loadMembershipStatus() {
+    const token = sessionStorage.getItem("innerCircleToken");
+
+    if (!token) return;
+
+    try {
+        const memberResponse = await fetch("/api/me", {
+            headers: {
+                "Authorization": token
+            }
+        });
+
+        const memberData = await memberResponse.json();
+
+        if (!memberData.success) return;
+
+        const member = memberData.member;
+
+        const membershipElement = document.getElementById("statusMembership");
+        const dateElement = document.getElementById("statusDate");
+
+        if (membershipElement) {
+            membershipElement.textContent =
+                member.membership || member.membershipTier || "Pending";
+        }
+
+        if (dateElement) {
+            dateElement.textContent = member.createdAt
+                ? new Date(member.createdAt).toLocaleDateString()
+                : "—";
+        }
+
+        const paymentResponse = await fetch("/api/payment-status", {
+            headers: {
+                "Authorization": token
+            }
+        });
+
+        const paymentData = await paymentResponse.json();
+
+        const paymentElement = document.getElementById("statusPayment");
+
+        if (paymentElement) {
+            if (!paymentData.payment) {
+                paymentElement.textContent = "No payment request";
+            } else {
+                paymentElement.textContent = paymentData.payment.status;
+            }
+        }
+
+    } catch (error) {
+        console.error("MEMBERSHIP STATUS ERROR:", error);
+    }
+}
+
+if (window.location.pathname.includes("dashboard.html")) {
+    loadMembershipStatus();
+}
+async function loadPaymentRequests() {
+    const adminToken = sessionStorage.getItem("innerCircleAdminToken");
+
+    if (!adminToken) return;
+
+    const container = document.getElementById("paymentRequests");
+
+    if (!container) return;
+
+    try {
+        const response = await fetch("/api/admin/payment-requests", {
+            headers: {
+                "Authorization": adminToken
+            }
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            container.innerHTML = "<p>Unable to load payment requests.</p>";
+            return;
+        }
+
+        if (!data.requests.length) {
+            container.innerHTML = "<p>No payment requests yet.</p>";
+            return;
+        }
+
+        container.innerHTML = data.requests.map(request => `
+            <div class="payment-request-card">
+                <h3>${request.full_name}</h3>
+                <p>Email: ${request.email}</p>
+                <p>Membership: <strong>${request.membership}</strong></p>
+                <p>Status: <strong>${request.status}</strong></p>
+                <p>Requested: ${new Date(request.created_at).toLocaleString()}</p>
+
+                ${
+                    request.status === "Pending"
+                    ? `<button onclick="confirmPayment(${request.id})">
+                        Confirm Payment
+                       </button>`
+                    : `<span>Payment Confirmed</span>`
+                }
+            </div>
+        `).join("");
+
+    } catch (error) {
+        console.error("PAYMENT REQUEST ERROR:", error);
+        container.innerHTML = "<p>Unable to load payment requests.</p>";
+    }
+}
+async function confirmPayment(requestId) {
+    const adminToken = sessionStorage.getItem("innerCircleAdminToken");
+
+    if (!adminToken) return;
+
+    const confirmed = confirm(
+        "Confirm that this payment has been independently verified?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+        const response = await fetch("/api/admin/confirm-payment", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": adminToken
+            },
+            body: JSON.stringify({
+                requestId: requestId
+            })
+        });
+
+        const data = await response.json();
+
+        alert(data.message);
+
+        if (data.success) {
+            loadPaymentRequests();
+        }
+
+    } catch (error) {
+        console.error("CONFIRM PAYMENT ERROR:", error);
+        alert("Unable to confirm payment.");
+    }
+}
+async function loadMemberNotification() {
+    const token = sessionStorage.getItem("innerCircleToken");
+    const notification = document.getElementById("memberNotification");
+
+    if (!token || !notification) return;
+
+    try {
+        const response = await fetch("/api/payment-status", {
+            headers: {
+                "Authorization": token
+            }
+        });
+
+        const data = await response.json();
+
+        if (!data.success || !data.payment) {
+            notification.textContent =
+                "No payment request has been submitted.";
+            return;
+        }
+
+        if (data.payment.status === "Pending") {
+            notification.textContent =
+                "Your payment request has been received and is awaiting verification.";
+        } else if (data.payment.status === "Confirmed") {
+            notification.textContent =
+                "Your payment has been verified. Your membership is now active.";
+        }
+
+    } catch (error) {
+        console.error("NOTIFICATION ERROR:", error);
+    }
 }
